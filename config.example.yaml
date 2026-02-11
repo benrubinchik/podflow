@@ -1,0 +1,75 @@
+## PodFlow Configuration
+## Copy this to podcast_config.yaml and edit with your details.
+
+audio:
+  bitrate: "128k"
+  channels: 1
+  sample_rate: 44100
+  target_lufs: -16.0
+  codec: libmp3lame
+
+video:
+  codec: libx264
+  preset: medium
+  crf: 23
+  audio_codec: aac
+  audio_bitrate: "192k"
+  max_width: 1920
+  max_height: 1080
+
+transcription:
+  # "whisper_api" (OpenAI API) or "whisper_local" (local model)
+  backend: whisper_api
+  model: base          # For local: tiny, base, small, medium, large
+  language: null       # Auto-detect if null
+  prompt: null         # Optional hint for Whisper
+
+metadata:
+  # "anthropic" or "openai"
+  provider: anthropic
+  model: claude-sonnet-4-5-20250929
+  max_tags: 10
+  generate_chapters: true
+
+youtube:
+  client_secrets_file: client_secrets.json
+  token_file: .youtube_token.json
+  default_category: "22"    # People & Blogs
+  default_privacy: unlisted
+
+hosting:
+  # "s3", "scp", or "local"
+  method: local
+
+  # S3 / Cloudflare R2 settings
+  s3_bucket: ""
+  s3_prefix: "episodes/"
+  s3_endpoint_url: null    # Set for R2/Minio
+  s3_region: auto
+  s3_public_url_base: ""   # e.g. https://cdn.example.com
+
+  # SCP settings
+  scp_host: ""
+  scp_user: ""
+  scp_remote_path: ""
+  scp_public_url_base: ""
+
+  # Local settings
+  local_dir: ./output/hosted
+  local_public_url_base: "http://localhost:8000/"
+
+feed:
+  title: "My Podcast"
+  link: "https://example.com"
+  description: "A podcast about things."
+  author: "Podcast Author"
+  email: "podcast@example.com"
+  image_url: ""
+  language: en
+  category: Technology
+  subcategory: ""
+  explicit: false
+  feed_filename: feed.xml
+
+output:
+  base_dir: ./output

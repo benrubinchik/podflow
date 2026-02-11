@@ -1,0 +1,11 @@
+output/
+podcast_config.yaml
+.env
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.youtube_token.json
+client_secrets.json
