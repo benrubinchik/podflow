@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -10,27 +11,32 @@ import ffmpeg
 
 from podflow.config import AudioConfig
 from podflow.utils.logging import get_logger
+from podflow.utils.paths import find_ffmpeg, find_ffprobe
 
 log = get_logger(__name__)
 
 
 def get_audio_duration(input_path: Path) -> float:
     """Get duration of an audio file in seconds."""
-    probe = ffmpeg.probe(str(input_path))
+    probe = ffmpeg.probe(str(input_path), cmd=find_ffprobe())
     duration = float(probe["format"]["duration"])
     return duration
 
 
 def measure_loudness(input_path: Path) -> dict:
     """Measure loudness using ffmpeg's loudnorm filter (first pass)."""
+    null_target = "NUL" if os.name == "nt" else "/dev/null"
     cmd = [
-        "ffmpeg", "-hide_banner", "-i", str(input_path),
+        find_ffmpeg(), "-hide_banner", "-i", str(input_path),
         "-af", "loudnorm=print_format=json",
-        "-f", "null", "-"
+        "-f", "null", null_target,
     ]
     result = subprocess.run(
-        cmd, capture_output=True, text=True, check=True,
+        cmd, capture_output=True, text=True,
     )
+    # ffmpeg returns non-zero on Windows with null output; check stderr for data instead
+    if result.returncode != 0 and "{" not in (result.stderr or ""):
+        raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
     # loudnorm JSON is in stderr
     stderr = result.stderr
     # Find the JSON block in the output
@@ -75,7 +81,7 @@ def process_audio(
     )
 
     log.info(
-        "Transcoding %s → %s (mono %s, %s LUFS)",
+        "Transcoding %s -> %s (mono %s, %s LUFS)",
         input_path.name, output_path.name, config.bitrate, config.target_lufs,
     )
 
@@ -92,7 +98,7 @@ def process_audio(
         )
         .overwrite_output()
     )
-    stream.run(quiet=True)
+    stream.run(cmd=find_ffmpeg(), quiet=True)
 
     log.info("Audio processing complete: %s", output_path.name)
     return output_path

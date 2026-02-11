@@ -2,9 +2,54 @@
 
 from __future__ import annotations
 
+import glob as _glob
 import hashlib
+import os
 import re
+import shutil
 from pathlib import Path
+
+_ffmpeg_path: str | None = None
+
+
+def find_ffmpeg() -> str:
+    """Find the ffmpeg executable, checking PATH and common install locations."""
+    global _ffmpeg_path
+    if _ffmpeg_path is not None:
+        return _ffmpeg_path
+
+    # Check PATH first
+    found = shutil.which("ffmpeg")
+    if found:
+        _ffmpeg_path = found
+        return found
+
+    # Check common winget install location on Windows
+    if os.name == "nt":
+        winget_pattern = os.path.expanduser(
+            "~/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg*/ffmpeg-*-full_build/bin/ffmpeg.exe"
+        )
+        matches = _glob.glob(winget_pattern)
+        if matches:
+            _ffmpeg_path = matches[0]
+            return matches[0]
+
+    raise FileNotFoundError(
+        "ffmpeg not found. Install it with: winget install ffmpeg"
+    )
+
+
+def find_ffprobe() -> str:
+    """Find the ffprobe executable next to ffmpeg."""
+    ffmpeg = find_ffmpeg()
+    ffprobe = str(Path(ffmpeg).parent / ("ffprobe.exe" if os.name == "nt" else "ffprobe"))
+    if os.path.exists(ffprobe):
+        return ffprobe
+    # Fallback: check PATH
+    found = shutil.which("ffprobe")
+    if found:
+        return found
+    raise FileNotFoundError("ffprobe not found")
 
 
 def sanitize_filename(name: str) -> str:

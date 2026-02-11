@@ -12,6 +12,7 @@ from podflow.utils.logging import get_logger
 from podflow.utils.paths import (
     episode_id_from_file,
     episode_output_dir,
+    find_ffprobe,
     output_audio_path,
     output_metadata_path,
     output_transcript_path,
@@ -25,7 +26,7 @@ def _has_video_stream(input_path: Path) -> bool:
     """Check if the input file contains a video stream."""
     try:
         import ffmpeg
-        probe = ffmpeg.probe(str(input_path))
+        probe = ffmpeg.probe(str(input_path), cmd=find_ffprobe())
         return any(
             s["codec_type"] == "video"
             for s in probe.get("streams", [])

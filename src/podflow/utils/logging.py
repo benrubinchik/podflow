@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import logging
+import sys
 
 from rich.console import Console
 from rich.logging import RichHandler
 
-console = Console()
+# Force UTF-8 on Windows to avoid encoding errors with Rich
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+console = Console(force_terminal=True)
 
 _configured = False
 

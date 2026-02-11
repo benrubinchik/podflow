@@ -133,7 +133,8 @@ def process(ctx: click.Context, input_file: str) -> None:
     # Video (if applicable)
     try:
         import ffmpeg
-        probe = ffmpeg.probe(str(input_path))
+        from podflow.utils.paths import find_ffprobe
+        probe = ffmpeg.probe(str(input_path), cmd=find_ffprobe())
         has_video = any(s["codec_type"] == "video" for s in probe.get("streams", []))
     except Exception:
         has_video = False

@@ -8,13 +8,14 @@ import ffmpeg
 
 from podflow.config import VideoConfig
 from podflow.utils.logging import get_logger
+from podflow.utils.paths import find_ffmpeg, find_ffprobe
 
 log = get_logger(__name__)
 
 
 def probe_video(input_path: Path) -> dict:
     """Probe a video file for stream information."""
-    return ffmpeg.probe(str(input_path))
+    return ffmpeg.probe(str(input_path), cmd=find_ffprobe())
 
 
 def needs_reencode(input_path: Path, config: VideoConfig) -> bool:
@@ -61,11 +62,11 @@ def process_video(
             .output(str(output_path), c="copy")
             .overwrite_output()
         )
-        stream.run(quiet=True)
+        stream.run(cmd=find_ffmpeg(), quiet=True)
         return output_path
 
     log.info(
-        "Re-encoding video %s → %s (H.264 crf=%d, %s)",
+        "Re-encoding video %s -> %s (H.264 crf=%d, %s)",
         input_path.name, output_path.name, config.crf, config.preset,
     )
 
